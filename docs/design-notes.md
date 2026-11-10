@@ -16,6 +16,7 @@ One tile is 88 × 96 × 128 = 1.08 million voxels, and the decoder carries
 | | peak memory, one tile, CPU | time |
 |---|---|---|
 | original image (PyTorch 0.2), per its README | "50 GB might be required" | – |
+| original image, measured on 8 CPU cores (whole run) | 28.7 GB | – |
 | slantpy `--forward literal` (same layers, current PyTorch) | 4.2 GB *measured* | 22 s |
 | slantpy `--forward lean` | 1.7 GB *measured* (0.65 GB of it is Python + PyTorch) | 22 s |
 
@@ -138,6 +139,14 @@ One T1, docker image against slantpy with the same binaries
 * Direct and docker results differ in 6.9 % of brain voxels; regional volumes
   differ by 1.9 % on average (up to 11 %), total brain volume by 0.2 %. Do not
   mix results of the two within one study.
+
+* Like for like on the same 8 CPU cores: docker image 26.4 min and 28.7 GB peak;
+  slantpy default 4.5 min and 1.8 GB; slantpy with legacy settings 7.4 min and
+  4.2 GB. Per stage (docker / slantpy default): pre-processing 267 / 118 s,
+  segmentation 728 / 143 s, back to native space 450 / 5 s, volume table 138 s / included in the 5 s.
+* With 8 tool threads instead of 1, slantpy's legacy mode and the docker image
+  agreed in 98.3 % of brain voxels instead of 97.2 %: the legacy chain's result
+  depends on the thread count. The direct result did not change.
 
 This is one scan, and the round-trip test shares its affine with the direct
 method, so treat it as supporting evidence rather than a validation study.

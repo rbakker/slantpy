@@ -83,7 +83,8 @@
   .pipe div::before { counter-increment: step; content: counter(step); font-family: var(--mono); font-size: 0.75rem; color: var(--accent); display: block; margin-bottom: 0.2rem; }
   .pipe b { display: block; font-size: 0.95rem; }
   .pipe span { color: var(--muted); }
-  .pipe .ext { border-style: dashed; }
+  .pipe .ext { border: 1.5px dashed var(--muted); }
+  .pipe .ext::after { content: "external"; position: absolute; top: 0.7rem; right: 0.7rem; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--warn); font-weight: 600; }
 
   /* tile explorer */
   .tiles { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1rem; margin: 0 0 1rem; }
@@ -159,8 +160,8 @@
     <p class="sub">A T1-weighted MRI goes in, 132 BrainCOLOR regions come out, on the original image grid.</p>
     <div class="stats">
       <div><b>2 / 5.9 M</b><span>voxels differ from the original pipeline in MNI space</span></div>
-      <div><b>~2 GB</b><span>memory on CPU, where the original asks for up to 50 GB</span></div>
-      <div><b>2.7 min</b><span>per scan on a GPU; the docker image took 24 min on CPU</span></div>
+      <div><b>1.8 GB</b><span>peak memory on CPU, where the docker image used 28.7 GB</span></div>
+      <div><b>4.5 min</b><span>per scan on 8 CPU cores, against 26.4 min for the docker image; 2.7 min with a GPU</span></div>
     </div>
     <p class="fine">Figures from one test scan on one workstation. The method is described in Huo et al., NeuroImage 2019. slantpy replaces the original's compiled Matlab and Python 2 code with Python 3 and uses the original trained networks; it is an independent port, not affiliated with the original authors.</p>
   </header>
@@ -174,7 +175,7 @@
       <div><b>Fuse</b><span>majority vote where tiles overlap</span></div>
       <div><b>Resample</b><span>labels to the original grid with the inverse affine</span></div>
     </div>
-    <p class="fine" style="margin-bottom:1.25rem">Dashed steps call an external program; the rest is Python.</p>
+    <p class="fine" style="margin-bottom:1.25rem">Steps marked “external” (dashed border) call NiftyReg or ANTs; the rest is Python.</p>
 
     <h3>The 27 tiles</h3>
     <p>The MNI volume is 172 × 220 × 156 voxels. Each network sees one block of 96 × 128 × 88 voxels at a fixed position, three positions per axis. Pick a tile to see where it sits.</p>
@@ -273,6 +274,20 @@ slantpy extract masidocker/public:deep_brain_seg_v1_1_0_CPU /data/resources/SLAN
         <tr><td>Native space, default</td><td>93.1 % of brain voxels, mean Dice 0.936</td></tr>
       </tbody>
     </table></div>
+    <h3>Run time and memory</h3>
+    <p>The same scan with both pipelines restricted to the same 8 CPU cores.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th></th><th>Docker image</th><th>slantpy, legacy settings</th><th>slantpy, default</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Total</strong></td><td class="num">26.4 min</td><td class="num">7.4 min</td><td class="num"><strong>4.5 min</strong></td></tr>
+        <tr><td><strong>Peak memory</strong></td><td class="num">28.7 GB</td><td class="num">4.2 GB</td><td class="num"><strong>1.8 GB</strong></td></tr>
+        <tr><td>Pre-processing</td><td class="num">267 s</td><td class="num">117 s</td><td class="num">118 s</td></tr>
+        <tr><td>Segmentation, 27 tiles</td><td class="num">728 s</td><td class="num">144 s</td><td class="num">143 s</td></tr>
+        <tr><td>Back to native space</td><td class="num">450 s</td><td class="num">182 s</td><td class="num">5 s</td></tr>
+        <tr><td>Volume table</td><td class="num">138 s</td><td class="num">included above</td><td class="num">included above</td></tr>
+      </tbody>
+    </table></div>
+    <p>With a GPU the default configuration took 2.7 min in total. Memory is the peak of the main process; the short-lived registration and N4 processes are not included.</p>
     <h3>Which native-space result is closer to what the networks predicted?</h3>
     <p>Each result was pushed back to MNI space with the exact forward affine and compared with the fused labels there.</p>
     <div class="bars" role="img" aria-label="Brain voxels that disagree after the round trip: docker image 9.7 percent, slantpy legacy 10.3 percent, slantpy default 5.0 percent">

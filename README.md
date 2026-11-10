@@ -20,11 +20,11 @@ Documentation: <https://rbakker.github.io/slantpy/> ·
 |  | original docker image | slantpy |
 |---|---|---|
 | Runtime needs | Matlab runtime, Python 2, PyTorch 0.2 | Python 3, current PyTorch |
-| Memory on CPU | "50 GB might be required" | about 2 GB (1.7 GB per tile measured) |
-| One test scan | 24 min (on CPU) | 2.7 min (on GPU) |
+| Peak memory, 8 CPU cores | 28.7 GB | 1.8 GB |
+| One scan, same 8 CPU cores | 26.4 min | 4.5 min (2.7 min with a GPU) |
 | Back to native space | two more registrations, then ANTs | one resampling with the inverse affine |
 
-Timings are from one test scan on one machine.
+Measured on one test scan on one machine; see [Validation](#validation).
 
 ## How it works
 
@@ -140,6 +140,22 @@ with the exact forward affine and compared with the network's labels there:
 |---|---|---|
 | docker image | 0.903 | 0.817 |
 | slantpy default | 0.950 | 0.914 |
+
+### Run time and memory
+
+The same scan with both pipelines restricted to the same 8 CPU cores:
+
+| | docker image | slantpy `--postproc legacy --forward literal` | slantpy default |
+|---|---|---|---|
+| total | 26.4 min | 7.4 min | 4.5 min |
+| peak memory | 28.7 GB | 4.2 GB | 1.8 GB |
+| pre-processing | 267 s | 117 s | 118 s |
+| segmentation, 27 tiles | 728 s | 144 s | 143 s |
+| back to native space | 450 s | 182 s | 5 s |
+| volume table | 138 s | included above | included above |
+
+With a GPU the default configuration took 2.7 min in total. Memory is the peak of
+the main process; the short-lived registration and N4 processes are not included.
 
 This is a single scan, not a validation study. Run it on your own data:
 
