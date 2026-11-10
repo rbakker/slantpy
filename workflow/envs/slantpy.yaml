@@ -1,0 +1,24 @@
+name: slantpy
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy
+  - scipy
+  - nibabel
+  - matplotlib-base        # QA PDF; drop it and run with --no-pdf if not wanted
+  - h5py                   # only needed to read a v7.3 atlas_model.mat
+  - pytorch                # conda-forge picks a CUDA build when the host has a GPU driver;
+                           # force CPU with "pytorch=*=cpu*"
+  # External programs (reg_aladin, N4BiasFieldCorrection). These are current
+  # releases, NOT the 2018 builds in the docker image, so registration and N4
+  # results will differ slightly from the image. Leave them out if you keep using
+  # the image's binaries (<resources>/SLANT/full-multi-atlas/{niftyreg,ANTs-bin}),
+  # which take precedence.
+  - niftyreg
+  - ants
+  - pip
+  - pip:
+      # slantpy itself. Snakemake copies this file before building the env, so a
+      # relative path does not work here: use a git URL (or an absolute path).
+      - git+https://github.com/rbakker/slantpy.git@v0.1.0

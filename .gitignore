@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.snakemake/
+.venv/
+# model files and data never belong in the repository
+*.pth
+*.npz
+*.mat
+*.nii
+*.nii.gz
+*.zip
+/extra/
+/resources/

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "slantpy"
+version = "0.1.0"
+description = "Python port of the SLANT whole-brain segmentation pipeline"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {file = "LICENSE"}
+authors = [{name = "TU Eindhoven"}]
+dependencies = ["numpy", "scipy", "nibabel", "torch"]
+
+[project.optional-dependencies]
+report = ["matplotlib"]
+mat73 = ["h5py"]
+
+[project.urls]
+Homepage = "https://github.com/rbakker/slantpy"
+Documentation = "https://rbakker.github.io/slantpy/"
+
+[project.scripts]
+slantpy = "slantpy.pipeline:main"
+
+[tool.setuptools]
+packages = ["slantpy"]

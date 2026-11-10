@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>slantpy documentation</title>
+<meta name="description" content="slantpy: SLANT whole-brain MRI segmentation without Matlab.">
+<style>
+  :root {
+    --paper: #f7f6f2; --panel: #ffffff; --ink: #1c2126; --muted: #5d6670; --line: #dcd9d0;
+    --accent: #0d6e6e; --accent-soft: #e0efec; --warn: #9a5b00; --warn-soft: #fbf1dc;
+    --code-bg: #efede6; --bar-a: #0d6e6e; --bar-b: #b9b4a6;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --sans: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #14181b; --panel: #1b2024; --ink: #e6e8ea; --muted: #9aa4ad; --line: #2f363c;
+      --accent: #5cc4bd; --accent-soft: #17302f; --warn: #e3b25a; --warn-soft: #2e2613;
+      --code-bg: #232a2f; --bar-a: #5cc4bd; --bar-b: #4a535b;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #14181b; --panel: #1b2024; --ink: #e6e8ea; --muted: #9aa4ad; --line: #2f363c;
+    --accent: #5cc4bd; --accent-soft: #17302f; --warn: #e3b25a; --warn-soft: #2e2613;
+    --code-bg: #232a2f; --bar-a: #5cc4bd; --bar-b: #4a535b;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 1.5rem; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.6 var(--sans); }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  code, pre, kbd { font-family: var(--mono); font-size: 0.875em; }
+  code { background: var(--code-bg); padding: 0.1em 0.35em; border-radius: 4px; }
+  pre { background: var(--code-bg); padding: 0.9rem 1rem; border-radius: 8px; overflow-x: auto; margin: 0; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+
+  .layout { display: grid; grid-template-columns: 15rem minmax(0, 46rem); gap: 3rem; max-width: 68rem; margin: 0 auto; padding: 0 1.5rem; }
+  nav.toc { position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto; padding: 2rem 0; font-size: 0.9rem; }
+  nav.toc .brand { font-family: var(--mono); font-weight: 700; font-size: 1.15rem; letter-spacing: -0.02em; color: var(--ink); text-decoration: none; }
+  nav.toc ol { list-style: none; margin: 1.5rem 0; padding: 0; border-left: 1px solid var(--line); }
+  nav.toc li a { display: block; padding: 0.3rem 0 0.3rem 0.9rem; margin-left: -1px; border-left: 2px solid transparent; color: var(--muted); text-decoration: none; }
+  nav.toc li a:hover { color: var(--ink); }
+  nav.toc li a.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+  nav.toc .links a { display: block; color: var(--muted); padding: 0.15rem 0; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .theme { margin-top: 1.25rem; background: none; border: 1px solid var(--line); border-radius: 6px; padding: 0.3rem 0.7rem; color: var(--muted); font-size: 0.85rem; }
+  .theme:hover { color: var(--ink); border-color: var(--muted); }
+
+  main { padding: 3rem 0 5rem; min-width: 0; }
+  header.hero h1 { font-family: var(--mono); font-size: clamp(2.2rem, 6vw, 3.4rem); letter-spacing: -0.04em; margin: 0 0 0.5rem; line-height: 1.05; }
+  header.hero p.lede { font-size: 1.2rem; color: var(--muted); margin: 0 0 1.75rem; max-width: 36rem; text-wrap: balance; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 0 0 1rem; }
+  .stats div { background: var(--panel); padding: 1rem 1.1rem; }
+  .stats b { display: block; font-family: var(--mono); font-size: 1.6rem; letter-spacing: -0.03em; color: var(--accent); }
+  .stats span { color: var(--muted); font-size: 0.875rem; line-height: 1.35; display: block; }
+  .fine { color: var(--muted); font-size: 0.85rem; margin: 0; }
+
+  section { margin-top: 3.5rem; }
+  h2 { font-size: 1.45rem; letter-spacing: -0.015em; margin: 0 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--line); }
+  h3 { font-size: 1.05rem; margin: 1.75rem 0 0.5rem; }
+  p { margin: 0 0 1rem; }
+  ul, ol.steps { margin: 0 0 1rem; padding-left: 1.25rem; }
+  li { margin-bottom: 0.35rem; }
+
+  .tablewrap { overflow-x: auto; margin: 0 0 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.925rem; }
+  th, td { text-align: left; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .codeblock { position: relative; margin: 0 0 1rem; }
+  .codeblock button { position: absolute; top: 0.45rem; right: 0.45rem; font-size: 0.75rem; background: var(--panel); border: 1px solid var(--line); border-radius: 5px; padding: 0.15rem 0.5rem; color: var(--muted); opacity: 0; transition: opacity 0.15s; }
+  .codeblock:hover button, .codeblock button:focus { opacity: 1; }
+
+  .note { background: var(--warn-soft); border-left: 3px solid var(--warn); padding: 0.8rem 1rem; border-radius: 0 8px 8px 0; margin: 0 0 1rem; }
+  .note strong { color: var(--warn); }
+
+  /* pipeline diagram */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; margin: 0 0 1rem; counter-reset: step; }
+  .pipe div { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 0.75rem 0.7rem; font-size: 0.85rem; line-height: 1.35; position: relative; }
+  .pipe div::before { counter-increment: step; content: counter(step); font-family: var(--mono); font-size: 0.75rem; color: var(--accent); display: block; margin-bottom: 0.2rem; }
+  .pipe b { display: block; font-size: 0.95rem; }
+  .pipe span { color: var(--muted); }
+  .pipe .ext { border-style: dashed; }
+
+  /* tile explorer */
+  .tiles { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1rem; margin: 0 0 1rem; }
+  .tiles .views { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .tiles figure { margin: 0; }
+  .tiles figcaption { font-size: 0.8rem; color: var(--muted); text-align: center; margin-top: 0.3rem; }
+  .tiles svg { width: 100%; height: auto; display: block; }
+  .tiles .box { fill: var(--code-bg); stroke: var(--line); }
+  .tiles .ghost { fill: none; stroke: var(--bar-b); stroke-width: 0.6; stroke-dasharray: 2 2; }
+  .tiles .sel { fill: var(--accent); fill-opacity: 0.25; stroke: var(--accent); stroke-width: 1.5; }
+  .tiles .controls { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; margin-top: 0.9rem; align-items: center; font-size: 0.875rem; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; margin-left: 0.4rem; }
+  .seg button { background: none; border: 0; padding: 0.2rem 0.65rem; font-family: var(--mono); border-right: 1px solid var(--line); }
+  .seg button:last-child { border-right: 0; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--panel); }
+  .tiles output { font-family: var(--mono); color: var(--muted); font-size: 0.85rem; }
+
+  /* bars */
+  .bars { margin: 0 0 1rem; }
+  .bars .row { display: grid; grid-template-columns: 11rem 1fr 3.6rem; gap: 0.75rem; align-items: center; margin-bottom: 0.45rem; font-size: 0.9rem; }
+  .bars .track { background: var(--code-bg); border-radius: 4px; height: 0.9rem; position: relative; overflow: hidden; }
+  .bars .fill { position: absolute; inset: 0 auto 0 0; background: var(--bar-b); border-radius: 4px; }
+  .bars .row.best .fill { background: var(--bar-a); }
+  .bars .val { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; }
+  .bars .axis { font-size: 0.75rem; color: var(--muted); margin-left: 11.75rem; }
+
+  footer { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.875rem; }
+
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0 16px; }
+    nav.toc { position: static; height: auto; padding: 1.25rem 0 0; display: flex; align-items: center; justify-content: space-between; }
+    nav.toc ol, nav.toc .links { display: none; }
+    .theme { margin: 0; }
+    main { padding-top: 1.5rem; }
+    .stats { grid-template-columns: 1fr; }
+    .pipe { grid-template-columns: 1fr; }
+    .bars .row { grid-template-columns: 1fr 3.6rem; }
+    .bars .row .label { grid-column: 1 / -1; margin-bottom: -0.3rem; }
+    .bars .axis { margin-left: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav class="toc" aria-label="Contents">
+  <a class="brand" href="#top">slantpy</a>
+  <ol>
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#need">What you need</a></li>
+    <li><a href="#install">Install</a></li>
+    <li><a href="#run">Run</a></li>
+    <li><a href="#options">Options</a></li>
+    <li><a href="#differences">Differences from the original</a></li>
+    <li><a href="#validation">Validation</a></li>
+    <li><a href="#workflow">Conda and Snakemake</a></li>
+    <li><a href="#quirks">Known quirks</a></li>
+    <li><a href="#credits">Credits and license</a></li>
+  </ol>
+  <div class="links">
+    <a href="https://github.com/rbakker/slantpy">Source on GitHub</a>
+    <a href="https://github.com/rbakker/slantpy/blob/main/docs/design-notes.md">Design notes</a>
+    <a href="https://github.com/MASILab/SLANTbrainSeg">Original SLANT</a>
+  </div>
+  <button class="theme" id="theme" type="button">Dark mode</button>
+</nav>
+
+<main id="top">
+  <header class="hero">
+    <h1>slantpy</h1>
+    <p class="lede">SLANT whole-brain segmentation without Matlab. A T1-weighted MRI goes in, 132 BrainCOLOR regions come out, on the original image grid.</p>
+    <div class="stats">
+      <div><b>2 / 5.9 M</b><span>voxels differ from the original pipeline in MNI space</span></div>
+      <div><b>~2 GB</b><span>memory on CPU, where the original asks for up to 50 GB</span></div>
+      <div><b>2.7 min</b><span>per scan on a GPU; the docker image took 24 min on CPU</span></div>
+    </div>
+    <p class="fine">Figures from one test scan on one workstation. slantpy is a Python port of <a href="https://github.com/MASILab/SLANTbrainSeg">SLANT</a> (Huo et al., NeuroImage 2019) and uses its trained networks.</p>
+  </header>
+
+  <section id="how">
+    <h2>How it works</h2>
+    <div class="pipe">
+      <div class="ext"><b>Register</b><span>T1 to the MNI305 template, affine (NiftyReg)</span></div>
+      <div class="ext"><b>Correct</b><span>N4 bias field (ANTs), then intensity normalisation</span></div>
+      <div><b>Segment</b><span>27 overlapping tiles, one 3-D U-Net each</span></div>
+      <div><b>Fuse</b><span>majority vote where tiles overlap</span></div>
+      <div><b>Resample</b><span>labels to the original grid with the inverse affine</span></div>
+    </div>
+    <p class="fine" style="margin-bottom:1.25rem">Dashed steps call an external program; the rest is Python.</p>
+
+    <h3>The 27 tiles</h3>
+    <p>The MNI volume is 172 × 220 × 156 voxels. Each network sees one block of 96 × 128 × 88 voxels at a fixed position, three positions per axis. Pick a tile to see where it sits.</p>
+    <div class="tiles">
+      <div class="views">
+        <figure><svg id="ax" viewBox="-4 -4 180 228" role="img" aria-label="Axial view of the selected tile"></svg><figcaption>axial view (x by y)</figcaption></figure>
+        <figure><svg id="co" viewBox="-4 -36 180 228" role="img" aria-label="Coronal view of the selected tile"></svg><figcaption>coronal view (x by z)</figcaption></figure>
+      </div>
+      <div class="controls">
+        <span>x<span class="seg" data-axis="0"><button type="button">1</button><button type="button">2</button><button type="button">3</button></span></span>
+        <span>y<span class="seg" data-axis="1"><button type="button">1</button><button type="button">2</button><button type="button">3</button></span></span>
+        <span>z<span class="seg" data-axis="2"><button type="button">1</button><button type="button">2</button><button type="button">3</button></span></span>
+        <output id="tileinfo"></output>
+      </div>
+    </div>
+    <p>Voxels in the middle of the brain are covered by all 27 tiles, voxels in the corners by one. The final label is the one most tiles voted for.</p>
+  </section>
+
+  <section id="need">
+    <h2>What you need</h2>
+    <ul>
+      <li><strong>Python 3.9 or newer</strong> with numpy, scipy, nibabel and PyTorch. matplotlib for the QA page; h5py only for a v7.3 <code>atlas_model.mat</code>.</li>
+      <li><strong>The SLANT model files:</strong> 27 network weight files, <code>atlas_model.mat</code> and the MNI305 template. They are not in the repository. <code>slantpy extract</code> copies them out of the SLANT docker image (see <a href="#install">Install</a>).</li>
+      <li><strong><code>reg_aladin</code> and <code>N4BiasFieldCorrection</code>:</strong> from the docker image, or from the conda packages <code>niftyreg</code> and <code>ants</code>.</li>
+    </ul>
+  </section>
+
+  <section id="install">
+    <h2>Install</h2>
+    <div class="codeblock"><pre><code>pip install git+https://github.com/rbakker/slantpy.git</code></pre></div>
+    <h3>Get the model files</h3>
+    <p>The trained networks are distributed by the SLANT authors inside their docker image, as described in the <a href="https://github.com/MASILab/SLANTbrainSeg">SLANT README</a>. Pull it once and let slantpy copy out what it needs:</p>
+    <div class="codeblock"><pre><code>docker pull masidocker/public:deep_brain_seg_v1_1_0_CPU
+slantpy extract masidocker/public:deep_brain_seg_v1_1_0_CPU /data/resources/SLANT</code></pre></div>
+    <p>The GPU build <code>masidocker/public:deep_brain_seg_v1_1_0</code> works as well; the model files are the same. After this step docker is no longer needed, unless you choose to run the registration tools inside the image. <code>extract</code> creates this folder, which every later command takes as <code>--extra-dir</code>:</p>
+    <div class="codeblock"><pre><code>/data/resources/SLANT/
+    model_dir/&lt;tile&gt;/finetune_out/models/model_epoch_0027.pth    27 tiles
+    full-multi-atlas/MNI/average305_t1_tal_lin*.nii.gz
+    full-multi-atlas/atlas-processing/atlas_model.npz
+    full-multi-atlas/niftyreg/   full-multi-atlas/ANTs-bin/       binaries from the image</code></pre></div>
+  </section>
+
+  <section id="run">
+    <h2>Run</h2>
+    <div class="codeblock"><pre><code>slantpy run t1.nii.gz out/ --extra-dir /data/resources/SLANT</code></pre></div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Output</th><th>Content</th></tr></thead>
+      <tbody>
+        <tr><td><code>out/FinalResult/t1_seg.nii.gz</code></td><td>Labels on the original grid, 8-bit.</td></tr>
+        <tr><td><code>out/FinalVolTxt/t1_label_volumes.txt</code></td><td>Volume of each region in mm³.</td></tr>
+        <tr><td><code>out/FinalPDF/t1_result.pdf</code></td><td>One-page QA view.</td></tr>
+        <tr><td><code>out/t1/</code></td><td>Intermediate files. A rerun resumes from them.</td></tr>
+      </tbody>
+    </table></div>
+    <p>The input file is never modified. Only the subject's output folder is written to, or mounted into a container.</p>
+  </section>
+
+  <section id="options">
+    <h2>Options</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Option</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>--device cpu</code> / <code>cuda:1</code></td><td>Default: the GPU with the most free memory if it has enough, otherwise the CPU. A GPU that runs out of memory part-way hands over to the CPU.</td></tr>
+        <tr><td><code>--threads N</code></td><td>CPU threads for PyTorch.</td></tr>
+        <tr><td><code>--interp</code></td><td>Label interpolation to native space: <code>linear</code> (default), <code>nearest</code> or <code>gaussian</code>.</td></tr>
+        <tr><td><code>--postproc legacy</code><br><code>--forward literal</code></td><td>Behave like the original pipeline.</td></tr>
+        <tr><td><code>--tools-docker-image</code></td><td>Run <code>reg_aladin</code> and N4 inside the docker image instead of on the host.</td></tr>
+        <tr><td><code>--half</code></td><td>Mixed precision on GPU. Not bit-identical.</td></tr>
+        <tr><td><code>--no-pdf</code>, <code>--keep-tiles</code>, <code>--pieces</code></td><td>Skip the QA page; keep per-tile labels; run single tiles for debugging.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="differences">
+    <h2>Differences from the original</h2>
+    <p>By default slantpy changes two things. Both can be switched back.</p>
+    <h3>Network evaluation</h3>
+    <p>Same layers and weights. The last three layers contain no normalisation, so they are evaluated in slabs, and the concatenated skip tensors are never built. Peak memory for one tile on CPU drops from 4.2 GB to 1.7 GB with the same run time.</p>
+    <h3>Back to native space</h3>
+    <p>The original registers the MNI-space image back to the T1 a second time, runs an ANTs registration between two label images to convert that transform, and then resamples. slantpy inverts the affine it already has and resamples once, label by label.</p>
+    <div class="note"><strong>Results are not interchangeable.</strong> On the test scan the default output and the docker output differed in 7 % of brain voxels. Regional volumes differed by 1.9 % on average and total brain volume by 0.2 %. Do not mix the two within one study.</div>
+  </section>
+
+  <section id="validation">
+    <h2>Validation</h2>
+    <p>One T1, the docker image against slantpy using the same NiftyReg and ANTs binaries.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Stage</th><th>Agreement with the docker image</th></tr></thead>
+      <tbody>
+        <tr><td>Registration to MNI</td><td>identical</td></tr>
+        <tr><td>Network input</td><td>within 1 part in 100,000</td></tr>
+        <tr><td>27 tiles</td><td>5 voxels in 10 million differ</td></tr>
+        <tr><td>Fused labels, MNI space</td><td>2 voxels of 5.9 million differ</td></tr>
+        <tr><td>Native space, legacy post-processing</td><td>97.2 % of brain voxels, mean Dice 0.973</td></tr>
+        <tr><td>Native space, default</td><td>93.1 % of brain voxels, mean Dice 0.936</td></tr>
+      </tbody>
+    </table></div>
+    <h3>Which native-space result is closer to what the networks predicted?</h3>
+    <p>Each result was pushed back to MNI space with the exact forward affine and compared with the fused labels there.</p>
+    <div class="bars" role="img" aria-label="Brain voxels that disagree after the round trip: docker image 9.7 percent, slantpy legacy 10.3 percent, slantpy default 5.0 percent">
+      <div class="row"><span class="label">docker image</span><span class="track"><span class="fill" style="width:80.8%"></span></span><span class="val">9.7 %</span></div>
+      <div class="row"><span class="label">slantpy, legacy</span><span class="track"><span class="fill" style="width:85.8%"></span></span><span class="val">10.3 %</span></div>
+      <div class="row best"><span class="label">slantpy, default</span><span class="track"><span class="fill" style="width:41.7%"></span></span><span class="val">5.0 %</span></div>
+      <div class="axis">Brain voxels that disagree after the round trip (lower is better). Full bar = 12 %.</div>
+    </div>
+    <p>The worst region improves from a Dice of 0.82 to 0.91. The direct mapping reproduces <code>reg_aladin</code>'s own resampled image with a correlation of 0.999, where a one-voxel error would give about 0.97.</p>
+    <p>This is a single scan, and the round-trip test shares its affine with the default method, so read it as supporting evidence. To repeat it on your own data:</p>
+    <div class="codeblock"><pre><code>python scripts/compare_with_docker.py t1.nii.gz --workdir /scratch/cmp
+python scripts/check_native_mapping.py /scratch/cmp/improved/t1/t1 seg_a.nii.gz seg_b.nii.gz</code></pre></div>
+  </section>
+
+  <section id="workflow">
+    <h2>Conda and Snakemake</h2>
+    <p><code>workflow/envs/slantpy.yaml</code> is an environment file for the <code>conda:</code> directive and <code>workflow/slant.smk</code> an example rule.</p>
+    <div class="codeblock"><pre><code>rule slant:
+    input:  t1="{sample}/t1.nii.gz"
+    output: seg="{sample}/slant/FinalResult/t1_seg.nii.gz"
+    params: out="{sample}/slant", extra=config["resources"] + "/SLANT"
+    threads: 4
+    conda:  "envs/slantpy.yaml"
+    shell:  "slantpy run {input.t1} {params.out} --extra-dir {params.extra} "
+            "--threads {threads} --no-pdf"</code></pre></div>
+    <p>The conda packages <code>niftyreg</code> and <code>ants</code> are current releases, not the 2018 builds in the docker image, so registration and N4 results differ slightly from the image. Binaries found under the resources folder take precedence over those in the environment.</p>
+  </section>
+
+  <section id="quirks">
+    <h2>Known quirks kept from the original</h2>
+    <ul>
+      <li>The networks run in training mode at test time, so batch normalisation uses each tile's own statistics. The weights were validated that way.</li>
+      <li>Each tile is scaled by its own minimum and maximum, so one very bright voxel changes the input of the whole tile.</li>
+      <li>Ties in the majority vote go to the lowest label number.</li>
+      <li>The registration called "rigid" in the original code is a 12-parameter affine.</li>
+    </ul>
+    <p>The <a href="https://github.com/rbakker/slantpy/blob/main/docs/design-notes.md">design notes</a> explain these and the memory measurements in detail.</p>
+  </section>
+
+  <section id="credits">
+    <h2>Credits and license</h2>
+    <p>SLANT was created by Yuankai Huo and colleagues at the MASI Lab, Vanderbilt University. slantpy is an independent port and is not affiliated with or endorsed by them. If you use it, cite:</p>
+    <ul>
+      <li>Huo Y, Xu Z, Xiong Y, Aboud K, Parvathaneni P, Bao S, Bermudez C, Resnick SM, Cutting LE, Landman BA. <a href="https://www.sciencedirect.com/science/article/pii/S1053811919302307">3D whole brain segmentation using spatially localized atlas network tiles.</a> NeuroImage, 2019.</li>
+      <li>Huo Y, Xu Z, Aboud K, Parvathaneni P, Bao S, Bermudez C, Resnick SM, Cutting LE, Landman BA. <a href="https://arxiv.org/abs/1806.00546">Spatially Localized Atlas Network Tiles Enables 3D Whole Brain Segmentation.</a> MICCAI 2018.</li>
+    </ul>
+    <p>Please also cite the software itself: MASI Lab, Vanderbilt University. SLANTbrainSeg. <a href="https://github.com/MASILab/SLANTbrainSeg">github.com/MASILab/SLANTbrainSeg</a>.</p>
+    <p>The trained weights, the atlas model and the MNI305 template are not redistributed here; their terms are those of their owners. NiftyReg and ANTs are called as external programs under their own licenses.</p>
+    <p>BSD 3-Clause. Copyright © 2018-2026 Vanderbilt University; copyright © 2026 TU Eindhoven. For research use only; not for clinical use.</p>
+  </section>
+
+  <footer>slantpy · <a href="https://github.com/rbakker/slantpy">github.com/rbakker/slantpy</a></footer>
+</main>
+</div>
+
+<script>
+(function () {
+  // theme toggle (remembered per browser, falls back to the system setting)
+  var root = document.documentElement, btn = document.getElementById('theme');
+  function stored() { try { return localStorage.getItem('slantpy-theme'); } catch (e) { return null; } }
+  function isDark() {
+    var t = root.getAttribute('data-theme');
+    return t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function label() { btn.textContent = isDark() ? 'Light mode' : 'Dark mode'; }
+  var s = stored();
+  if (s === 'dark' || s === 'light') root.setAttribute('data-theme', s);
+  label();
+  btn.addEventListener('click', function () {
+    var next = isDark() ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('slantpy-theme', next); } catch (e) {}
+    label();
+  });
+
+  // copy buttons on code blocks
+  document.querySelectorAll('.codeblock').forEach(function (block) {
+    if (!navigator.clipboard) return;
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = 'Copy';
+    b.addEventListener('click', function () {
+      navigator.clipboard.writeText(block.querySelector('code').textContent).then(function () {
+        b.textContent = 'Copied';
+        setTimeout(function () { b.textContent = 'Copy'; }, 1500);
+      });
+    });
+    block.appendChild(b);
+  });
+
+  // highlight the current section in the contents list
+  var links = {};
+  document.querySelectorAll('nav.toc ol a').forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        Object.keys(links).forEach(function (k) { links[k].classList.toggle('active', k === e.target.id); });
+      });
+    }, { rootMargin: '-10% 0px -75% 0px' });
+    document.querySelectorAll('main section').forEach(function (sec) { io.observe(sec); });
+  }
+
+  // tile explorer: the same layout as slantpy/labels.py
+  var R = [[[0, 96], [38, 134], [76, 172]], [[0, 128], [46, 174], [92, 220]], [[0, 88], [34, 122], [68, 156]]];
+  var DIM = [172, 220, 156], sel = [1, 1, 1], NS = 'http://www.w3.org/2000/svg';
+  function rect(svg, cls, x, y, w, h) {
+    var r = document.createElementNS(NS, 'rect');
+    r.setAttribute('class', cls); r.setAttribute('x', x); r.setAttribute('y', y);
+    r.setAttribute('width', w); r.setAttribute('height', h); r.setAttribute('rx', 1.5);
+    svg.appendChild(r);
+  }
+  function draw(id, a, b) {           // a: horizontal axis, b: vertical axis (drawn upwards)
+    var svg = document.getElementById(id);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    rect(svg, 'box', 0, 0, DIM[a], DIM[b]);
+    for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) {
+      var ra = R[a][i], rb = R[b][j];
+      rect(svg, 'ghost', ra[0], DIM[b] - rb[1], ra[1] - ra[0], rb[1] - rb[0]);
+    }
+    var sa = R[a][sel[a]], sb = R[b][sel[b]];
+    rect(svg, 'sel', sa[0], DIM[b] - sb[1], sa[1] - sa[0], sb[1] - sb[0]);
+  }
+  function update() {
+    draw('ax', 0, 1); draw('co', 0, 2);
+    document.querySelectorAll('.seg').forEach(function (g) {
+      var ax = +g.getAttribute('data-axis');
+      g.querySelectorAll('button').forEach(function (b, i) { b.setAttribute('aria-pressed', i === sel[ax] ? 'true' : 'false'); });
+    });
+    var n = ['x', 'y', 'z'].map(function (c, k) { var r = R[k][sel[k]]; return c + ' ' + r[0] + '-' + r[1]; });
+    document.getElementById('tileinfo').textContent =
+      'tile ' + (sel[0] + 1) + '_' + (sel[1] + 1) + '_' + (sel[2] + 1) + ':  ' + n.join(',  ');
+  }
+  document.querySelectorAll('.seg').forEach(function (g) {
+    var ax = +g.getAttribute('data-axis');
+    g.querySelectorAll('button').forEach(function (b, i) {
+      b.addEventListener('click', function () { sel[ax] = i; update(); });
+    });
+  });
+  update();
+})();
+</script>
+</body>
+</html>
