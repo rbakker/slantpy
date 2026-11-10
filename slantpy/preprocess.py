@@ -2,6 +2,7 @@
 
     T1 --reg_aladin--> MNI305 grid --N4--> intensity normalisation --> target_processed.nii.gz
 """
+import json
 import os
 
 import nibabel as nib
@@ -111,17 +112,35 @@ def model_likelihood(normed, atlas_path):
     return float(np.exp(np.corrcoef(vec, recon)[0, 1] - 1))
 
 
-def preprocess(target, sub_dir, tools, atlas_model, log=print):
-    """Full pre-processing of one T1. Returns the path of target_processed.nii.gz."""
+def preprocess(target, sub_dir, tools, atlas_model, n4=True, log=print):
+    """Full pre-processing of one T1. Returns the path of target_processed.nii.gz.
+
+    ``n4=False`` skips the N4 bias-field correction, for images that were
+    already corrected upstream; the registered image is normalised directly and
+    ANTs is not needed at all.
+    """
     os.makedirs(sub_dir, exist_ok=True)
     out = os.path.join(sub_dir, "target_processed.nii.gz")
+    settings_file = os.path.join(sub_dir, "target_processed.json")
+    settings = {"n4": bool(n4)}
     if os.path.exists(out):
+        # an existing result made with other settings must not be reused silently
+        previous = json.load(open(settings_file)) if os.path.exists(settings_file) else {"n4": True}
+        if previous != settings:
+            raise RuntimeError(
+                "%s was made with N4 bias correction %s, but this run asks for it %s. "
+                "Use a new output folder or --clean." % (
+                    out, "on" if previous["n4"] else "off", "on" if n4 else "off"))
         log("pre-processing: %s exists, skipping" % out)
         return out
     log("registering to MNI305 (reg_aladin)")
     res, _, _ = register_to_mni(target, sub_dir, tools)
-    log("N4 bias field correction")
-    corr = n4_correct(res, sub_dir, tools)
+    if n4:
+        log("N4 bias field correction")
+        corr = n4_correct(res, sub_dir, tools)
+    else:
+        log("N4 bias field correction skipped (--skip-n4)")
+        corr = res
 
     img = nib.load(corr)
     data = np.asanyarray(img.dataobj)
@@ -136,4 +155,6 @@ def preprocess(target, sub_dir, tools, atlas_model, log=print):
     tmp = out[:-7] + ".tmp.nii.gz"
     nib.save(nib.Nifti1Image(normed, img.affine, hdr), tmp)
     os.replace(tmp, out)
+    with open(settings_file, "w") as fh:
+        json.dump(settings, fh)
     return out

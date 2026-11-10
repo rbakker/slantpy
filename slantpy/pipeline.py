@@ -44,7 +44,7 @@ def find_atlas_model(extra_dir):
 def run_subject(t1, out_dir, extra_dir, tools, postproc="direct", interp="linear",
                 forward="lean", device=None, half=False, threads=None, pdf=True,
                 atlas_model=None, keep_tiles=False, pieces=None, min_gpu_free_gb=None,
-                log=print):
+                n4=True, log=print):
     t1 = os.path.abspath(t1)
     name = subject_name(t1)
     sub_dir = os.path.join(out_dir, name)
@@ -65,7 +65,7 @@ def run_subject(t1, out_dir, extra_dir, tools, postproc="direct", interp="linear
 
     t0 = time.time()
     processed = preprocess.preprocess(t1, sub_dir, tools,
-                                      atlas_model or find_atlas_model(extra_dir), log=log)
+                                      atlas_model or find_atlas_model(extra_dir), n4=n4, log=log)
     timing["preprocessing"] = time.time() - t0
 
     t0 = time.time()
@@ -168,6 +168,9 @@ def main(argv=None):
     r.add_argument("--tool-threads", type=int, default=1,
                    help="threads for N4/ANTs/NiftyReg (the original image uses 1 for reproducibility)")
     r.add_argument("--atlas-model", default=None, help="atlas_model.mat or its .npz extract")
+    r.add_argument("--skip-n4", action="store_true",
+                   help="skip the N4 bias-field correction (input was already bias-corrected); "
+                        "ANTs is then not needed")
     r.add_argument("--no-pdf", action="store_true")
     r.add_argument("--keep-tiles", action="store_true", help="save each tile's raw network labels")
     r.add_argument("--clean", action="store_true", help="empty the output directory first")
@@ -201,7 +204,7 @@ def main(argv=None):
                     interp=a.interp, forward=a.forward, device=a.device, half=a.half,
                     threads=a.threads, pdf=not a.no_pdf, atlas_model=a.atlas_model,
                     keep_tiles=a.keep_tiles, pieces=a.pieces,
-                    min_gpu_free_gb=a.min_gpu_free_gb)
+                    min_gpu_free_gb=a.min_gpu_free_gb, n4=not a.skip_n4)
     return 0
 
 

@@ -1,11 +1,16 @@
 # slantpy
 
-**SLANT whole-brain segmentation without Matlab.** A T1-weighted MRI goes in,
-132 BrainCOLOR regions come out, on the original image grid.
+**SLANT whole-brain segmentation without Matlab, ported from
+[MASILab/SLANTbrainSeg](https://github.com/MASILab/SLANTbrainSeg), the original
+implementation by Yuankai Huo and colleagues at the MASI Lab, Vanderbilt
+University.** A T1-weighted MRI goes in, 132 BrainCOLOR regions come out, on the
+original image grid.
 
-slantpy is a Python port of [SLANT](https://github.com/MASILab/SLANTbrainSeg)
-(Huo et al., NeuroImage 2019). It uses the original trained networks and
-reproduces the original pipeline's result in MNI space almost voxel for voxel,
+The method is described in Huo et al., *3D whole brain segmentation using
+spatially localized atlas network tiles*, NeuroImage 2019. slantpy replaces the
+original's compiled Matlab and Python 2 / PyTorch 0.2 code with Python 3; it is
+an independent port, not affiliated with the original authors. It uses the
+original trained networks and reproduces the original pipeline's result in MNI space almost voxel for voxel,
 in a fraction of the time and memory, and with a simpler, more accurate way
 back to the original image.
 
@@ -24,8 +29,8 @@ Timings are from one test scan on one machine.
 ## How it works
 
 1. **Register** the T1 to the MNI305 template (NiftyReg `reg_aladin`, affine).
-2. **Bias-correct** (ANTs `N4BiasFieldCorrection`) and **normalise** intensities
-   to the atlas with a robust linear fit.
+2. **Bias-correct** (ANTs `N4BiasFieldCorrection`; optional, see `--skip-n4`) and
+   **normalise** intensities to the atlas with a robust linear fit.
 3. **Segment** 27 overlapping tiles, each with its own 3-D U-Net.
 4. **Fuse** the tiles by majority vote.
 5. **Resample** the labels to the original image with the inverse of the
@@ -86,6 +91,7 @@ Useful options:
 | `--device cpu` / `cuda:1` | Default: the GPU with the most free memory if it has enough, otherwise the CPU. |
 | `--threads N` | CPU threads for PyTorch. |
 | `--interp linear` / `nearest` / `gaussian` | Label interpolation to native space (default `linear`). |
+| `--skip-n4` | Skip the N4 bias-field correction, for images already corrected upstream. ANTs is then not needed. |
 | `--postproc legacy --forward literal` | Behave like the original pipeline (see below). |
 | `--tools-docker-image IMAGE` | Run `reg_aladin` and N4 inside the SLANT docker image instead of on the host. |
 | `--half` | Mixed precision on GPU; not bit-identical. |

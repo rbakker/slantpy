@@ -168,3 +168,41 @@ def test_docker_tools_only_mount_the_subject_folder(tmp_path, monkeypatch):
             for p in a.replace("[", ",").replace("]", ",").split(","):
                 if p.startswith("/"):
                     assert p.startswith(str(sub)) or p.startswith("/extra/"), p
+
+
+def test_skip_n4(tmp_path):
+    """--skip-n4: no ANTs binary is needed, the registered image is normalised
+    directly, and a result made with other settings is not reused silently."""
+    import shutil
+    import pytest
+    from slantpy import preprocess
+    from slantpy.tools import Tools
+    here = os.path.dirname(os.path.abspath(__file__))
+    fma = tmp_path / "extra" / "full-multi-atlas"
+    (fma / "niftyreg" / "bin").mkdir(parents=True)
+    (fma / "MNI").mkdir()
+    for n in ("reg_aladin", "reg_transform"):                  # deliberately no N4BiasFieldCorrection
+        shutil.copy(os.path.join(here, "fake_tools", "fake_tool.py"), str(fma / "niftyreg" / "bin" / n))
+        os.chmod(str(fma / "niftyreg" / "bin" / n), 0o755)
+    rng = np.random.default_rng(0)
+    g = np.indices(MNI_SHAPE)
+    brain = sum(((gi - s / 2) / (s * 0.4)) ** 2 for gi, s in zip(g, MNI_SHAPE)) < 1
+    img = (brain * 100 + rng.normal(0, 5, MNI_SHAPE)).astype(np.float32)
+    aff = np.eye(4); aff[:3, 3] = [-86, -126, -72]
+    nib.save(nib.Nifti1Image(img, aff), str(fma / "MNI" / "average305_t1_tal_lin.nii.gz"))
+    nib.save(nib.Nifti1Image(brain.astype(np.uint8), aff), str(fma / "MNI" / "average305_t1_tal_lin_mask.nii.gz"))
+    atlas = str(tmp_path / "atlas.npz")
+    np.savez(atlas, brain_seg=brain, norm_regressand=np.sort(rng.normal(size=int(brain.sum()))))
+    sub = tmp_path / "out" / "t1"
+    sub.mkdir(parents=True)
+    t1 = str(sub / "orig_target.nii.gz")
+    nib.save(nib.Nifti1Image(img.astype(np.int16), aff), t1)
+    tools = Tools(str(tmp_path / "extra"))
+    quiet = lambda m: None
+    out = preprocess.preprocess(t1, str(sub), tools, atlas, n4=False, log=quiet)
+    assert os.path.exists(out) and not os.path.exists(str(sub / "N4-targets"))
+    vals = np.asanyarray(nib.load(out).dataobj)[brain]
+    assert abs(vals.mean()) < 0.05 and abs(vals.std() - 1) < 0.05          # normalised to the atlas
+    assert preprocess.preprocess(t1, str(sub), tools, atlas, n4=False, log=quiet) == out   # resume
+    with pytest.raises(RuntimeError, match="N4 bias correction off"):
+        preprocess.preprocess(t1, str(sub), tools, atlas, n4=True, log=quiet)

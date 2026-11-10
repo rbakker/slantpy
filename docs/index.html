@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>slantpy documentation</title>
-<meta name="description" content="slantpy: SLANT whole-brain MRI segmentation without Matlab.">
+<meta name="description" content="slantpy: SLANT whole-brain MRI segmentation without Matlab, ported from MASILab/SLANTbrainSeg.">
 <style>
   :root {
     --paper: #f7f6f2; --panel: #ffffff; --ink: #1c2126; --muted: #5d6670; --line: #dcd9d0;
@@ -48,7 +48,8 @@
 
   main { padding: 3rem 0 5rem; min-width: 0; }
   header.hero h1 { font-family: var(--mono); font-size: clamp(2.2rem, 6vw, 3.4rem); letter-spacing: -0.04em; margin: 0 0 0.5rem; line-height: 1.05; }
-  header.hero p.lede { font-size: 1.2rem; color: var(--muted); margin: 0 0 1.75rem; max-width: 36rem; text-wrap: balance; }
+  header.hero p.lede { font-size: 1.2rem; color: var(--muted); margin: 0 0 0.6rem; max-width: 40rem; text-wrap: pretty; }
+  header.hero p.sub { color: var(--muted); margin: 0 0 1.75rem; max-width: 40rem; }
   .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 0 0 1rem; }
   .stats div { background: var(--panel); padding: 1rem 1.1rem; }
   .stats b { display: block; font-family: var(--mono); font-size: 1.6rem; letter-spacing: -0.03em; color: var(--accent); }
@@ -154,13 +155,14 @@
 <main id="top">
   <header class="hero">
     <h1>slantpy</h1>
-    <p class="lede">SLANT whole-brain segmentation without Matlab. A T1-weighted MRI goes in, 132 BrainCOLOR regions come out, on the original image grid.</p>
+    <p class="lede">SLANT whole-brain segmentation without Matlab, ported from <a href="https://github.com/MASILab/SLANTbrainSeg">MASILab/SLANTbrainSeg</a>, the original implementation by Yuankai Huo and colleagues at the MASI Lab, Vanderbilt University.</p>
+    <p class="sub">A T1-weighted MRI goes in, 132 BrainCOLOR regions come out, on the original image grid.</p>
     <div class="stats">
       <div><b>2 / 5.9 M</b><span>voxels differ from the original pipeline in MNI space</span></div>
       <div><b>~2 GB</b><span>memory on CPU, where the original asks for up to 50 GB</span></div>
       <div><b>2.7 min</b><span>per scan on a GPU; the docker image took 24 min on CPU</span></div>
     </div>
-    <p class="fine">Figures from one test scan on one workstation. slantpy is a Python port of <a href="https://github.com/MASILab/SLANTbrainSeg">SLANT</a> (Huo et al., NeuroImage 2019) and uses its trained networks.</p>
+    <p class="fine">Figures from one test scan on one workstation. The method is described in Huo et al., NeuroImage 2019. slantpy replaces the original's compiled Matlab and Python 2 code with Python 3 and uses the original trained networks; it is an independent port, not affiliated with the original authors.</p>
   </header>
 
   <section id="how">
@@ -238,6 +240,7 @@ slantpy extract masidocker/public:deep_brain_seg_v1_1_0_CPU /data/resources/SLAN
         <tr><td><code>--device cpu</code> / <code>cuda:1</code></td><td>Default: the GPU with the most free memory if it has enough, otherwise the CPU. A GPU that runs out of memory part-way hands over to the CPU.</td></tr>
         <tr><td><code>--threads N</code></td><td>CPU threads for PyTorch.</td></tr>
         <tr><td><code>--interp</code></td><td>Label interpolation to native space: <code>linear</code> (default), <code>nearest</code> or <code>gaussian</code>.</td></tr>
+        <tr><td><code>--skip-n4</code></td><td>Skip the N4 bias-field correction, for images already corrected upstream. ANTs is then not needed. The networks were trained on N4-corrected images, so use it only when the input really is bias-corrected.</td></tr>
         <tr><td><code>--postproc legacy</code><br><code>--forward literal</code></td><td>Behave like the original pipeline.</td></tr>
         <tr><td><code>--tools-docker-image</code></td><td>Run <code>reg_aladin</code> and N4 inside the docker image instead of on the host.</td></tr>
         <tr><td><code>--half</code></td><td>Mixed precision on GPU. Not bit-identical.</td></tr>
